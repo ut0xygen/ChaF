@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
@@ -11,94 +10,144 @@ namespace ChaF
 {
   partial class MainWindow
   {
-    private Storyboard _sbMainProgress = new Storyboard();
-    private DoubleAnimation _aMainProgress = new DoubleAnimation(0, 0, _DURATION_SEC_PROGRESS);
-
-    private bool _isStoppedMainProgress = true;
-    private bool _isRequestedStopMainProgress = false;
-    private SemaphoreSlim _ssMainProgress = new SemaphoreSlim(0, 1);
-
-
-    /// <summary>
-    ///   Initializes objects related MainProgress.
-    /// </summary>
-    private void InitializeMainProgress()
+    private class MainProgress_
     {
-      MainProgress.Fill = Brushes.Cyan;
-      MainProgress.Height = Main.Height * 0.05;
-      MainProgress.Margin = new Thickness(0, 0, 0, MainProgress.Height);
-      MainProgress.Opacity = 0.7;
-      _sbMainProgress.Children.Add(_aMainProgress);
-      Storyboard.SetTargetName(_aMainProgress, MainProgress.Name);
-      Storyboard.SetTargetProperty(_aMainProgress, new PropertyPath(Rectangle.WidthProperty));
-    }
+      private static readonly PropertyPath PROPERTY_PATH_WIDTH = new PropertyPath(Rectangle.WidthProperty);
 
-    /// <summary>
-    ///   Show MainProgress.
-    /// </summary>
-    /// <returns></returns>
-    private async Task ShowMainProgress()
-    {
-      async void OnCompleted(object sender, EventArgs e)
+      private MainWindow W {
+        get;
+      }
+      private FrameworkElement P {
+        get;
+      }
+      private FrameworkElement T {
+        get;
+      }
+      private Storyboard SB {
+        get; set;
+      }
+      private DoubleAnimation A {
+        get; set;
+      }
+      private object EXLock {
+        get; set;
+      }
+      private SemaphoreSlim EXSemaphore {
+        get; set;
+      }
+      private bool EXProcessing {
+        get; set;
+      }
+      private bool EXShown {
+        get; set;
+      }
+
+      private bool IsRequestedStop {
+        get; set;
+      }
+
+
+      public MainProgress_(MainWindow window, FrameworkElement parent, FrameworkElement target)
       {
-        MainProgress.HorizontalAlignment = HorizontalAlignment.Left;
-        _aMainProgress.From = 0;
-        _aMainProgress.To = Main.Width;
+        W = window;
+        P = parent;
+        T = target;
+        SB = new Storyboard();
+        A = new DoubleAnimation(0, 0, DURATION_PROGRESS);
+        EXLock = new object();
+        EXSemaphore = new SemaphoreSlim(0, 1);
+        EXProcessing = false;
+        EXShown = false;
 
-        _sbMainProgress.Completed -= OnCompleted;
+        IsRequestedStop = false;
 
-        if (_isRequestedStopMainProgress == false) {
+        T.Height = P.Height * 0.05;
+        T.Margin = new Thickness(0, 0, 0, T.Height);
+        SB.Children.Add(A);
+        Storyboard.SetTargetName(A, T.Name);
+        Storyboard.SetTargetProperty(A, PROPERTY_PATH_WIDTH);
+      }
+
+
+      async void OnCompletedStart(object sender, EventArgs e)
+      {
+        SB.Stop(W);
+
+        T.HorizontalAlignment = HorizontalAlignment.Left;
+        A.From = 0;
+        A.To = P.Width;
+
+        SB.Completed -= OnCompletedStart;
+
+        if (IsRequestedStop == false) {
           await Task.Delay(200);
 
-          _sbMainProgress.Completed += OnCompletedMainProgressEnd;
-          _sbMainProgress.Begin(this, true);
+          SB.Completed += OnCompletedEnd;
+          SB.Begin(W, true);
         }
         else {
-          _isStoppedMainProgress = true;
-          _isRequestedStopMainProgress = false;
-          _ssMainProgress.Release();
+          IsRequestedStop = false;
+          EXSemaphore.Release();
         }
       }
 
-      void OnCompletedMainProgressEnd(object sender, EventArgs e)
+      void OnCompletedEnd(object sender, EventArgs e)
       {
-        MainProgress.HorizontalAlignment = HorizontalAlignment.Right;
-        _aMainProgress.From = Main.Width;
-        _aMainProgress.To = 0;
+        SB.Stop(W);
 
-        _sbMainProgress.Completed -= OnCompletedMainProgressEnd;
-        _sbMainProgress.Completed += OnCompleted;
-        _sbMainProgress.Begin(this, true);
+        T.HorizontalAlignment = HorizontalAlignment.Right;
+        A.From = P.Width;
+        A.To = 0;
+
+        SB.Completed -= OnCompletedEnd;
+        SB.Completed += OnCompletedStart;
+        SB.Begin(W, true);
       }
 
+      public async Task Show()
+      {
+        lock (EXLock) {
+          if (EXProcessing || EXShown) return;
+          EXProcessing = true;
+        }
 
-      if (_isStoppedMainProgress == false) {
-        throw new NullReferenceException("\"MainProgress\" is executing.");
+
+        DataContextMain_.ProgressVisibility = Visibility.Visible;
+        T.GetBindingExpression(VisibilityProperty).UpdateTarget();
+        await Task.Delay(1);
+
+        T.HorizontalAlignment = HorizontalAlignment.Left;
+        A.From = 0;
+        A.To = P.Width;
+        SB.Completed += OnCompletedEnd;
+        SB.Begin(W, true);
+
+
+        lock (EXLock) {
+          EXShown = true;
+          EXProcessing = false;
+        }
       }
 
-      _isStoppedMainProgress = false;
-      _dcMain.ProgressVisibility = Visibility.Visible;
-      MainProgress.GetBindingExpression(Rectangle.VisibilityProperty).UpdateTarget();
-      await Task.Delay(1);
-      OnCompleted(null, null);
-    }
+      public async Task Hide()
+      {
+        lock (EXLock) {
+          if (EXProcessing || EXShown == false) return;
+          EXProcessing = true;
+        }
 
-    /// <summary>
-    ///   Hide MainProgress.
-    /// </summary>
-    /// <returns></returns>
-    private async Task HideMainProgress()
-    {
-      if (_isStoppedMainProgress) {
-        return;
+
+        IsRequestedStop = true;
+        await EXSemaphore.WaitAsync();
+        DataContextMain_.ProgressVisibility = Visibility.Hidden;
+        T.GetBindingExpression(VisibilityProperty).UpdateTarget();
+
+
+        lock (EXLock) {
+          EXShown = false;
+          EXProcessing = false;
+        }
       }
-
-
-      _isRequestedStopMainProgress = true;
-      await _ssMainProgress.WaitAsync();
-      _dcMain.ProgressVisibility = Visibility.Hidden;
-      MainProgress.GetBindingExpression(Rectangle.VisibilityProperty).UpdateTarget();
-      _sbMainProgress.Stop(this);
-    }
+    };
   }
 }

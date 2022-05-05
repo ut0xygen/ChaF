@@ -3,8 +3,10 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Equaller;
 
@@ -80,82 +82,121 @@ namespace ChaF
       }
     }
 
-
-    // Constant value.
-    private const int MAX_SIZE_FILE = 100000;
-    private const int _MAX_HOTKEY_ID = 0xC000;
-    private const int _TEXT_FEED_TIME = 10;
-    private const double _BACKGROUND_FROM = 0.7;
-    private const double _BACKGROUND_TO = 0.0;
+    private const int TIME_TEXT_FEED = 10;
+    private const double OPACITY_BLINK = 0.7;
     private static readonly IEasingFunction _EASING_FUNCTION_EASE_IN_OUT = new CubicEase() { EasingMode = EasingMode.EaseInOut };
-    private static readonly Duration _DURATION_SEC_MAIN_FRAME = new Duration(TimeSpan.FromMilliseconds(500));
-    private static readonly Duration _DURATION_SEC_PROGRESS = new Duration(TimeSpan.FromMilliseconds(200));
-    private static readonly Duration _DURATION_SEC_FADE_OUT = new Duration(TimeSpan.FromMilliseconds(200));
-    private static readonly Duration _DURATION_SEC_BLINK = new Duration(TimeSpan.FromMilliseconds(200));
+    private static readonly Duration DURATION_MAIN_FRAME = new Duration(TimeSpan.FromMilliseconds(500));
+    private static readonly Duration DURATION_PROGRESS = new Duration(TimeSpan.FromMilliseconds(200));
+    private static readonly Duration DURATION_HIDE = new Duration(TimeSpan.FromMilliseconds(200));
+    private static readonly Duration DURATION_BLINK = new Duration(TimeSpan.FromMilliseconds(200));
 
-    // System objects.
-    IntPtr _hWnd;
-    private int _hotkeyClose = 0;
-    private int _hotkeyVisibility = 1;
-    private object _lockerHotkey = new object();
-    private bool _isInitialized = false;
-    private bool _isProcessingHotkey = false;
+    private int ID_HOTKEY_CLOSE {
+      get; set;
+    }
+    private int ID_HOTKEY_VISIBILITY {
+      get; set;
+    }
 
-    // Window movable limit.
-    private double _positionLeftUpper = 0.0d;
-    private double _positionTopUpper = 0.0d;
+    private static DataContextMain DataContextMain_ {
+      get;
+    }
+    private IntPtr WindowHandle {
+      get; set;
+    }
+    private bool ValidHotkey {
+      get; set;
+    }
+    private object EXLockHotkey {
+      get; set;
+    }
+    private bool EXProcessingHotkey {
+      get; set;
+    }
+    private string Surface {
+      get; set;
+    }
+    private double HeightRatio {
+      get; set;
+    }
+    private double PositionRatio {
+      get; set;
+    }
+    private bool EnableBlink {
+      get; set;
+    }
+    private double LeftLimit {
+      get; set;
+    }
+    private double TopLimit {
+      get; set;
+    }
+    private MainFrame_ MF {
+      get; set;
+    }
+    private MainProgress_ MP {
+      get; set;
+    }
+    private MainStatus_ MS {
+      get; set;
+    }
+    private MainTime_ MT {
+      get; set;
+    }
 
-    // DataContext.
-    private DataContextMain _dcMain = new DataContextMain();
 
-    // Settings.
-    private string _surface = "LEFT";
-    private bool _blink = false;
-    private double _height = 0.05d;
-    private double _position = 0.0d;
+    static MainWindow()
+    {
+      DataContextMain_ = new DataContextMain();
+    }
 
 
-    /// <summary>
-    ///   Calculate size and position.
-    /// </summary>
     private void Setup()
     {
-      double screenWidth;
-      double screenHeight;
+      double screenWidth = SystemParameters.WorkArea.Width;
+      double screenHeight = SystemParameters.WorkArea.Height;
 
+
+      ID_HOTKEY_CLOSE = 0;
+      ID_HOTKEY_VISIBILITY = 1;
+
+      Main.DataContext = DataContextMain_;
+      ValidHotkey = false;
+      EXLockHotkey = new object();
+      EXProcessingHotkey = false;
+      Surface = "LEFT";
+      HeightRatio = 0.05d;
+      PositionRatio = 0.0d;
+      EnableBlink = false;
 
       ReadSettings();
       SetupSystem();
 
-      // Get screen-size(Work-area).
-      screenWidth = SystemParameters.WorkArea.Width;
-      screenHeight = SystemParameters.WorkArea.Height;
       // Set window-size.
-      this.Height = screenHeight * _height;
+      this.Height = screenHeight * HeightRatio;
       this.Width = this.Height * 2.3;
       // Set movable-limit.
-      _positionLeftUpper = screenWidth - this.Width;
-      _positionTopUpper = screenHeight - this.Height;
+      LeftLimit = screenWidth - this.Width;
+      TopLimit = screenHeight - this.Height;
       // Set window-position.
-      switch (_surface) {
+      switch (Surface) {
         case "LEFT":
           this.Left = 0.0d;
-          this.Top = _positionTopUpper * _position;
+          this.Top = TopLimit * PositionRatio;
           break;
 
         case "RIGHT":
-          this.Left = _positionLeftUpper;
-          this.Top = _positionTopUpper * _position;
+          this.Left = LeftLimit;
+          this.Top = TopLimit * PositionRatio;
           break;
 
         case "TOP":
-          this.Left = _positionLeftUpper * _position;
+          this.Left = LeftLimit * PositionRatio;
           this.Top = 0.0d;
           break;
 
         case "BOTTOM":
-          this.Left = _positionLeftUpper * _position;
-          this.Top = _positionTopUpper;
+          this.Left = LeftLimit * PositionRatio;
+          this.Top = TopLimit;
           break;
       }
       // Adjust window-position.
@@ -163,53 +204,45 @@ namespace ChaF
       if (this.Left <= 0) {
         this.Left = 0;
       }
-      else if (this.Left >= _positionLeftUpper) {
-        this.Left = _positionLeftUpper;
+      else if (this.Left >= LeftLimit) {
+        this.Left = LeftLimit;
       }
       //   Vertical-axis.
       if (this.Top <= 0) {
         this.Top = 0;
       }
-      else if (this.Top >= _positionTopUpper) {
-        this.Top = _positionTopUpper;
+      else if (this.Top >= TopLimit) {
+        this.Top = TopLimit;
       }
 
       // Initialize.
       Main.Height = this.Height;
       Main.Width = this.Width;
-      Main.DataContext = _dcMain;
-      InitializeMainFrame();
-      InitializeMainProgress();
-      InitializeMainStatus();
-      InitializeMainTime();
+      MF = new MainFrame_(this, Main, MainFrame);
+      MP = new MainProgress_(this, Main, MainProgress);
+      MS = new MainStatus_(this, Main, MainStatusI, MainStatus);
+      MT = new MainTime_(this, Main, MainTimeI, MainTime, MainTimeDateI, MainTimeDate, MainTimeClockI, MainTimeClock, MainTimeClockHour, MainTimeClockMinute, MainTimeClockSecond, MainTimeClockColonA, MainTimeClockColonB);
     }
 
-    /// <summary>
-    ///   Read settings file.
-    /// </summary>
     private void ReadSettings()
     {
-        byte[] data;
+      const int MAX_FILE_SIZE = 1048576;  // 2^20
 
 
       try {
-        FileStream file;
-        long size;
+        FileStream file = File.Open("chaf.ini", FileMode.Open, FileAccess.Read, FileShare.Read);
+        long size = file.Length;
+        byte[] data;
 
 
-        file = File.Open("chaf.ini", FileMode.Open, FileAccess.Read, FileShare.Read);
-
-        size = file.Length;
-        if (file.CanRead == false || size == 0 || size > MAX_SIZE_FILE) {
-          throw new Exception();
-        }
-
+        if (file.CanRead == false || size == 0 || size > MAX_FILE_SIZE) throw new Exception();
         data = new byte[size];
         file.Read(data, 0, (int)size);
-
         file.Close();
 
-        EquallerEntryInformation[] entries = new EquallerEntryInformation[] {
+        _ = Equaller.Equaller.Parse(
+          data,
+          new EquallerEntryInformation[] {
             new EquallerEntryInformation("SURFACE", false, (EquallerEventArgs e) =>{
               string temp = e.Content.ToUpper();
 
@@ -219,7 +252,7 @@ namespace ChaF
                 case "RIGHT":
                 case "TOP":
                 case "BOTTOM":
-                  _surface = temp;
+                  Surface = temp;
                   break;
               }
             }),
@@ -229,7 +262,7 @@ namespace ChaF
 
               switch (temp) {
                 case "TRUE":
-                  _blink = true;
+                  EnableBlink = true;
                   break;
               }
             }),
@@ -238,10 +271,10 @@ namespace ChaF
 
 
               try {
-                _height = double.Parse(e.Content);
+                HeightRatio = double.Parse(e.Content);
 
-                if (_height < 0.05 || _position > 0.5) {
-                  _height = 0.05d;
+                if (HeightRatio < 0.05 || PositionRatio > 0.5) {
+                  HeightRatio = 0.05d;
                 }
               }
               catch {
@@ -252,166 +285,169 @@ namespace ChaF
 
 
               try {
-                _position = double.Parse(e.Content);
+                PositionRatio = double.Parse(e.Content);
 
-                if (_position < 0 || _position > 1) {
-                  _position = 0.0d;
+                if (PositionRatio < 0 || PositionRatio > 1) {
+                  PositionRatio = 0.0d;
                 }
               }
               catch {
               }
             })
-          };
-        _ = Equaller.Equaller.Parse(data, entries, true);
+          }, true);
       }
-      catch {
-      }
+      catch { }
     }
 
-    /// <summary>
-    ///   Apply window-ex-style and set hot-key.
-    /// </summary>
     private void SetupSystem()
     {
       const int GWL_EXSTYLE = -20;
       const long WS_EXNOACTIVATE = 0x08000000L;
       const long WS_EXTRANSPARENT = 0x00000020L;
+      const int MAX_HOTKEY_ID = 0xC000;
+
       int result;
+      bool failed = false;
 
 
-      _hWnd = new WindowInteropHelper(this).Handle;
+      // Get window handle.
+      WindowHandle = new WindowInteropHelper(this).Handle;
 
+      // Apply extend window style.
       SetWindowLongPtr64(
-        _hWnd,
+        WindowHandle,
         GWL_EXSTYLE,
-        new IntPtr(GetWindowLongPtr64(_hWnd, GWL_EXSTYLE).ToInt64() | WS_EXNOACTIVATE | WS_EXTRANSPARENT)
+        new IntPtr(GetWindowLongPtr64(WindowHandle, GWL_EXSTYLE).ToInt64() | WS_EXNOACTIVATE | WS_EXTRANSPARENT)
       );
 
-      for (; _hotkeyClose < _MAX_HOTKEY_ID; ++_hotkeyClose) {
-        result = RegisterHotKey(_hWnd, _hotkeyClose, (int)ModifierKeys.Alt, 0x2E);
+      // Register close hotkey.
+      failed = true;
+      for (; ID_HOTKEY_CLOSE < MAX_HOTKEY_ID; ++ID_HOTKEY_CLOSE) {
+        result = RegisterHotKey(WindowHandle, ID_HOTKEY_CLOSE, (int)ModifierKeys.Alt, 0x2E);
         if (result != 0) {
+          failed = false;
           break;
         }
       }
-      for (; _hotkeyVisibility < _MAX_HOTKEY_ID; ++_hotkeyVisibility) {
-        result = RegisterHotKey(_hWnd, _hotkeyVisibility, (int)ModifierKeys.Alt, 0x78);
+      if (failed) Close();
+      // Register show/hide hotkey.
+      failed = true;
+      for (; ID_HOTKEY_VISIBILITY < MAX_HOTKEY_ID; ++ID_HOTKEY_VISIBILITY) {
+        result = RegisterHotKey(WindowHandle, ID_HOTKEY_VISIBILITY, (int)ModifierKeys.Alt, 0x78);
         if (result != 0) {
+          failed = false;
           break;
         }
       }
-
+      if (failed) Close();
+      // Subscribe hotkey event.
       ComponentDispatcher.ThreadPreprocessMessage += OnThreadPreprocessMessage;
     }
 
     private async void Execute()
     {
-      await ShowMainFrame();
+      // Show MainFrame.
+      await MF.Show();
 
-      // Synchronization.
+      // Adjustment statement.
       if (DateTime.Now.Second > 56) {
-        DateTime dt = DateTime.Now;
+        DateTime dt;
 
 
-        await ShowMainProgress();
-        await ShowMainStatus("SYNCHRONIZING");
+        // Show waiting-text and play loading animation.
+        await MP.Show();
+        await MS.Show("SYNCHRONIZING");
 
+        // Adjustment
         dt = DateTime.Now;
         await Task.Delay(((60 - dt.Second) * 1000) + (1000 - dt.Millisecond));
 
-        await HideMainStatus();
-        await HideMainProgress();
+        // Hide waiting-text and stop loading animation.
+        await MS.Hide();
+        await MP.Hide();
       }
-      await ShowMainClock();
-      
-      _isInitialized = true;
+
+      // Show time(date and clock).
+      await MT.Show();
+
+      // Enable hotkey.
+      ValidHotkey = true;
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
       ComponentDispatcher.ThreadPreprocessMessage -= OnThreadPreprocessMessage;
-      UnregisterHotKey(_hWnd, _hotkeyClose);
-      UnregisterHotKey(_hWnd, _hotkeyVisibility);
+      UnregisterHotKey(WindowHandle, ID_HOTKEY_CLOSE);
+      UnregisterHotKey(WindowHandle, ID_HOTKEY_VISIBILITY);
     }
 
-    protected override void OnClosed(EventArgs e)
-    {
-      base.OnClosed(e);
-    }
+    //protected override void OnClosed(EventArgs e)
+    //{
+    //  base.OnClosed(e);
+    //}
 
     private void OnThreadPreprocessMessage(ref MSG msg, ref bool handled)
     {
-      // Check hotkey.
-      if (msg.message != 0x0312) {
-        return;
+      if (msg.message != 0x0312) return;
+
+      lock (EXLockHotkey) {
+        if (EXProcessingHotkey || ValidHotkey == false) return;
+        EXProcessingHotkey = true;
       }
 
 
-      lock (_lockerHotkey) {
-        if (_isInitialized == false || _isProcessingHotkey) {
-          return;
-        }
-        else {
-          _isProcessingHotkey = true;
-        }
-      }
-
-
-      if (msg.wParam.ToInt32() == _hotkeyClose) {
+      if (msg.wParam.ToInt32() == ID_HOTKEY_CLOSE) {
         if (IsVisible) {
-          Task.Run(() => {
-            this.Dispatcher.Invoke(new Action(async () => {
-              await HideMainTime();
-              await HideMainFrame();
-              this.Hide();
-              await HideMainTime_();
-              this.Close();
-            }));
-          });
+          this.Dispatcher.Invoke(new Action(async () => {
+            await MT.Hide();
+            await MF.Hide();
+            this.Hide();
+            await MT.HidePost();
+            this.Close();
+          }));
         }
         else {
-          lock (_lockerHotkey) {
-            _isProcessingHotkey = false;
+          lock (EXLockHotkey) {
+            EXProcessingHotkey = false;
           }
         }
       }
-      else if (msg.wParam.ToInt32() == _hotkeyVisibility) {
-        Task.Run(() => {
-          this.Dispatcher.Invoke(new Action(async () => {
-            if (IsVisible) {
-              await HideMainTime();
-              await HideMainFrame();
-              this.Hide();
-              await HideMainTime_();
-            }
-            else {
-              this.Show();
-              await ShowMainFrame();
+      else if (msg.wParam.ToInt32() == ID_HOTKEY_VISIBILITY) {
+        this.Dispatcher.Invoke(new Action(async () => {
+          if (IsVisible) {
+            await MT.Hide();
+            await MF.Hide();
+            this.Hide();
+            await MT.HidePost();
+          }
+          else {
+            this.Show();
+            await MF.Show();
 
-              // Synchronization.
-              if (DateTime.Now.Second > 56) {
-                DateTime dt = DateTime.Now;
-
-
-                await ShowMainProgress();
-                await ShowMainStatus("SYNCHRONIZING");
-
-                dt = DateTime.Now;
-                await Task.Delay(((60 - dt.Second) * 1000) + (1000 - dt.Millisecond));
+            // Synchronization.
+            if (DateTime.Now.Second > 56) {
+              DateTime dt = DateTime.Now;
 
 
-                await HideMainStatus();
-                await HideMainProgress();
-              }
+              await MP.Show();
+              await MS.Show("SYNCHRONIZING");
 
-              await ShowMainClock();
+              dt = DateTime.Now;
+              await Task.Delay(((60 - dt.Second) * 1000) + (1000 - dt.Millisecond));
+
+
+              await MS.Hide();
+              await MP.Hide();
             }
 
+            await MT.Show();
+          }
 
-            lock (_lockerHotkey) {
-              _isProcessingHotkey = false;
-            }
-          }));
-        });
+
+          lock (EXLockHotkey) {
+            EXProcessingHotkey = false;
+          }
+        }));
       }
     }
   }

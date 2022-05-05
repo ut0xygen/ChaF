@@ -11,109 +11,153 @@ namespace ChaF
 {
   partial class MainWindow
   {
-    private Storyboard _sbMainStatus = new Storyboard();
-    private Storyboard _sbMainStatusTextBackground = new Storyboard();
-    private DoubleAnimation _aMainStatus = new DoubleAnimation(1, 0.0, _DURATION_SEC_FADE_OUT);
-    private DoubleAnimation _aMainStatusTextBackground = new DoubleAnimation(_BACKGROUND_FROM, _BACKGROUND_TO, _DURATION_SEC_BLINK);
-
-
-    /// <summary>
-    ///   Initializes objects related MainStatus.
-    /// </summary>
-    private void InitializeMainStatus()
+    private class MainStatus_
     {
-      MainStatus.Width = Main.Width * 0.8;
-      MainStatus.Height = Main.Height * 0.7;
-      MainStatus.Margin = new Thickness(Main.Width * 0.1, 0, 0, 0);
-      MainStatusTextBackground.Color = Colors.Cyan;  // Color.FromArgb()で透明度を指定するとアニメーションが正常に動作しない。
+      private static readonly PropertyPath PROPERTY_PATH_OPACITY = new PropertyPath(Viewbox.OpacityProperty);
+      private static readonly PropertyPath PROPERTY_PATH_BACKGROUND_OPACITY = new PropertyPath("(0).(1)", new DependencyProperty[] { TextBlock.BackgroundProperty, SolidColorBrush.OpacityProperty });
 
-      _sbMainStatus.Children.Add(_aMainStatus);
-      Storyboard.SetTargetName(_sbMainStatus, MainStatus.Name);
-      Storyboard.SetTargetProperty(_sbMainStatus, new PropertyPath(Viewbox.OpacityProperty));
-      _sbMainStatusTextBackground.Children.Add(_aMainStatusTextBackground);
-      Storyboard.SetTargetName(_aMainStatusTextBackground, "MainStatusTextBackground");
-      Storyboard.SetTargetProperty(_aMainStatusTextBackground, new PropertyPath(SolidColorBrush.OpacityProperty));
-    }
-
-    /// <summary>
-    ///   Show MainStatus.
-    /// </summary>
-    /// <param name="text"></param>
-    /// <returns></returns>
-    private async Task ShowMainStatus(string text)
-    {
-      if (text == string.Empty) {
-        throw new NullReferenceException("\"string text\" is empty.");
+      private MainWindow W {
+        get;
+      }
+      private FrameworkElement P {
+        get;
+      }
+      private FrameworkElement I {
+        get;
+      }
+      private FrameworkElement T {
+        get;
+      }
+      private Storyboard SB {
+        get; set;
+      }
+      private DoubleAnimation A {
+        get; set;
+      }
+      private Storyboard SBBackground {
+        get; set;
+      }
+      private DoubleAnimation ABackground {
+        get; set;
+      }
+      private object EXLock {
+        get; set;
+      }
+      private SemaphoreSlim EXSemaphore {
+        get; set;
+      }
+      private bool EXProcessing {
+        get; set;
+      }
+      private bool EXShown {
+        get; set;
       }
 
 
-      SemaphoreSlim ss = new SemaphoreSlim(0, 1);
+      public MainStatus_(MainWindow window, FrameworkElement parent, FrameworkElement indirect, FrameworkElement target)
+      {
+        W = window;
+        P = parent;
+        I = indirect;
+        T = target;
+        SB = new Storyboard();
+        A = new DoubleAnimation(1, 0, DURATION_HIDE);
+        SBBackground = new Storyboard();
+        ABackground = new DoubleAnimation(OPACITY_BLINK, 0, DURATION_BLINK);
+        EXLock = new object();
+        EXSemaphore = new SemaphoreSlim(0, 1);
+        EXProcessing = false;
+        EXShown = false;
+
+        I.Width = P.Width * 0.8;
+        I.Height = P.Height * 0.7;
+        I.Margin = new Thickness(P.Width * 0.1, 0, 0, 0);
+        SB.Children.Add(A);
+        Storyboard.SetTargetName(A, I.Name);
+        Storyboard.SetTargetProperty(A, PROPERTY_PATH_OPACITY);
+        SBBackground.Children.Add(ABackground);
+        Storyboard.SetTargetName(ABackground, T.Name);
+        Storyboard.SetTargetProperty(ABackground, PROPERTY_PATH_BACKGROUND_OPACITY);
+        SB.Completed += OnCompleted;
+        SBBackground.Completed += OnCompleted;
+      }
+
 
       void OnCompleted(object sender, EventArgs e)
       {
-        _sbMainStatusTextBackground.Completed -= OnCompleted;
-        ss.Release();
+        EXSemaphore.Release();
       }
 
-
-      // Reset.
-      _dcMain.StatusTextWidth = 0;
-      _dcMain.StatusText = text;
-      MainStatusText.GetBindingExpression(TextBlock.WidthProperty).UpdateTarget();
-      MainStatusText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-      await Task.Delay(1);
-      _dcMain.StatusTextWidth = MainStatusText.ActualWidth;
-      _dcMain.StatusText = string.Empty;
-      MainStatusText.GetBindingExpression(TextBlock.WidthProperty).UpdateTarget();
-      MainStatusText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-      await Task.Delay(1);
-      _sbMainStatus.Stop(this);
-      // Show.
-      _dcMain.StatusVisibility = Visibility.Visible;
-      MainStatus.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
-      await Task.Delay(1);
-
-      for (int i =0; ;) {
-        _dcMain.StatusText += text[i];
-        MainStatusText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-
-        ++i;
-        if (i >= text.Length) {
-          break;
+      public async Task Show(string text)
+      {
+        lock (EXLock) {
+          if (EXProcessing || EXShown || text == string.Empty) return;
+          EXProcessing = true;
         }
-        await Task.Delay(_TEXT_FEED_TIME);
-      }
-      if (_blink) {
-        _sbMainStatusTextBackground.Completed += OnCompleted;
-        _sbMainStatusTextBackground.Begin(this, true);
-        await ss.WaitAsync();
-      }
-    }
 
-    /// <summary>
-    ///   Hide MainStatus.
-    /// </summary>
-    /// <returns></returns>
-    private async Task HideMainStatus(bool noAnimation = false)
-    {
-      SemaphoreSlim ss = new SemaphoreSlim(0, 1);
 
-      void OnCompleted(object sender, EventArgs e)
+        // Reset.
+        DataContextMain_.StatusTextWidth = 0;
+        DataContextMain_.StatusText = text;
+        T.GetBindingExpression(WidthProperty).UpdateTarget();
+        T.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+        await Task.Delay(1);
+        DataContextMain_.StatusTextWidth = T.ActualWidth;
+        DataContextMain_.StatusText = string.Empty;
+        T.GetBindingExpression(WidthProperty).UpdateTarget();
+        T.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+        await Task.Delay(1);
+        // Show.
+        DataContextMain_.StatusVisibility = Visibility.Visible;
+        I.GetBindingExpression(VisibilityProperty).UpdateTarget();
+        await Task.Delay(1);
+
+        for (int i = 0; ;) {
+          DataContextMain_.StatusText += text[i];
+          T.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+
+          ++i;
+          if (i >= text.Length) {
+            break;
+          }
+          await Task.Delay(TIME_TEXT_FEED);
+        }
+        if (W.EnableBlink) {
+          SBBackground.Begin(W, true);
+          await EXSemaphore.WaitAsync();
+          SBBackground.Stop(W);
+        }
+
+
+        lock (EXLock) {
+          EXShown = true;
+          EXProcessing = false;
+        }
+      }
+
+      public async Task Hide(bool animation = true)
       {
-        _sbMainStatus.Completed -= OnCompleted;
-        ss.Release();
-      }
+        lock (EXLock) {
+          if (EXProcessing || EXShown == false) return;
+          EXProcessing = true;
+        }
 
 
-      if (noAnimation == false) {
-        _sbMainStatus.Completed += OnCompleted;
-        _sbMainStatus.Begin(this, true);
-        await ss.WaitAsync();
+        if (animation) {
+          SB.Begin(W, true);
+          await EXSemaphore.WaitAsync();
+          SB.Stop(W);
+        }
+        DataContextMain_.StatusVisibility = Visibility.Hidden;
+        I.GetBindingExpression(VisibilityProperty).UpdateTarget();
+        await Task.Delay(1);
+
+
+        lock (EXLock) {
+          EXShown = false;
+          EXProcessing = false;
+        }
       }
-      _dcMain.StatusVisibility = Visibility.Hidden;
-      MainStatus.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
-      _sbMainStatus.Stop(this);
-      _sbMainStatusTextBackground.Stop(this);
-    }
+    };
   }
 }

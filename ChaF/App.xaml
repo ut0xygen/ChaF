@@ -8,8 +8,12 @@
             /ChaF;component/Fonts/Roboto-Bold.ttf#Roboto,
             /ChaF;component/Fonts/NotoSansJP-Bold.otf#Noto Sans JP
         </FontFamily>
+        <SolidColorBrush x:Key="ColorBackground" Color="Black" Opacity="0.5"/>
+        <SolidColorBrush x:Key="ColorProgress" Color="Cyan" Opacity="0.7"/>
+        <SolidColorBrush x:Key="ColorFont" Color="White"/>
+        <SolidColorBrush x:Key="ColorBlink" Color="Cyan" Opacity="0"/>
         <Style x:Key="WindowStyle" TargetType="Window">
-            <Setter Property="Foreground" Value="White"></Setter>
+            <Setter Property="Foreground" Value="{StaticResource ColorFont}"></Setter>
             <Setter Property="FontFamily" Value="{StaticResource Font}"></Setter>
         </Style>
     </Application.Resources>

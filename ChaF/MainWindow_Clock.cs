@@ -11,156 +11,337 @@ namespace ChaF
 {
   partial class MainWindow
   {
-    private Storyboard _sbMainTime = new Storyboard();
-    private Storyboard _sbMainTimeDate = new Storyboard();
-    private Storyboard _sbMainTimeDateTextBackground = new Storyboard();
-    private Storyboard _sbMainTimeClock = new Storyboard();
-    private Storyboard _sbMainTimeClockBackground = new Storyboard();
-    private Storyboard _sbMainTimeClockHourTextBackground = new Storyboard();
-    private Storyboard _sbMainTimeClockMinuteTextBackground = new Storyboard();
-    private Storyboard _sbMainTimeClockSecondTextBackground = new Storyboard();
-    private DoubleAnimation _aMainTime = new DoubleAnimation(1.0, 0.0, _DURATION_SEC_FADE_OUT);
-    private DoubleAnimation _aMainTimeDate = new DoubleAnimation(1.0, 0.0, _DURATION_SEC_FADE_OUT);
-    private DoubleAnimation _aMainTimeDateBackground = new DoubleAnimation(_BACKGROUND_FROM, _BACKGROUND_TO, _DURATION_SEC_BLINK);
-    private DoubleAnimation _aMainTimeClock = new DoubleAnimation(1.0, 0.0, _DURATION_SEC_FADE_OUT);
-    private DoubleAnimation _aMainTimeClockBackground = new DoubleAnimation(_BACKGROUND_FROM, _BACKGROUND_TO, _DURATION_SEC_BLINK);
-    private DoubleAnimation _aMainTimeClockHourTextBackground = new DoubleAnimation(_BACKGROUND_FROM, _BACKGROUND_TO, _DURATION_SEC_BLINK);
-    private DoubleAnimation _aMainTimeClockMinuteTextBackground = new DoubleAnimation(_BACKGROUND_FROM, _BACKGROUND_TO, _DURATION_SEC_BLINK);
-    private DoubleAnimation _aMainTimeClockSecondTextBackground = new DoubleAnimation(_BACKGROUND_FROM, _BACKGROUND_TO, _DURATION_SEC_BLINK);
-
-    private bool _isRequestedStopMainTimeClock = false;
-    private Task _taskMainTimeClock = Task.CompletedTask;
-
-
-    /// <summary>
-    ///   Initializes objects related MainTime.
-    /// </summary>
-    private void InitializeMainTime()
+    private class MainTime_
     {
-      MainTime.Width = Main.Width * 0.9;  // If size of Viewbox is auto, then forced to parent size fit?
-      MainTime.Height = Main.Height * 0.9;
-      MainTimeFrame.Width = MainTime.Width;  // If size of Grid is auto too, then forced to parent size fit?
-      MainTimeFrame.Height = MainTime.Height;
-      MainTimeDateTextBackground.Color = Colors.Cyan;
-      MainTimeClockBackground.Color = Colors.Cyan;
-      MainTimeClockHourTextBackground.Color = Colors.Cyan;
-      MainTimeClockMinuteTextBackground.Color = Colors.Cyan;
-      MainTimeClockSecondTextBackground.Color = Colors.Cyan;
+      private static readonly PropertyPath PROPERTY_PATH_OPACITY = new PropertyPath(Viewbox.OpacityProperty);
+      private static readonly PropertyPath PROPERTY_PATH_TEXTBLOCK_BACKGROUND_OPACITY = new PropertyPath("(0).(1)", new DependencyProperty[] { TextBlock.BackgroundProperty, SolidColorBrush.OpacityProperty });
 
-      _sbMainTime.Children.Add(_aMainTime);
-      Storyboard.SetTargetName(_sbMainTime, MainTime.Name);
-      Storyboard.SetTargetProperty(_sbMainTime, new PropertyPath(Viewbox.OpacityProperty));
-      _sbMainTimeDate.Children.Add(_aMainTimeDate);
-      Storyboard.SetTargetName(_aMainTimeDate, MainTimeDate.Name);
-      Storyboard.SetTargetProperty(_aMainTimeDate, new PropertyPath(Viewbox.OpacityProperty));
-      _sbMainTimeDateTextBackground.Children.Add(_aMainTimeDateBackground);
-      Storyboard.SetTargetName(_aMainTimeDateBackground, "MainTimeDateTextBackground");
-      Storyboard.SetTargetProperty(_aMainTimeDateBackground, new PropertyPath(Brush.OpacityProperty));
-      _sbMainTimeClock.Children.Add(_aMainTimeClock);
-      Storyboard.SetTargetName(_aMainTimeClock, MainTimeClock.Name);
-      Storyboard.SetTargetProperty(_aMainTimeClock, new PropertyPath(Viewbox.OpacityProperty));
-      _sbMainTimeClockBackground.Children.Add(_aMainTimeClockBackground);
-      Storyboard.SetTargetName(_aMainTimeClockBackground, "MainTimeClockBackground");
-      Storyboard.SetTargetProperty(_aMainTimeClockBackground, new PropertyPath(Brush.OpacityProperty));
-      _sbMainTimeClockHourTextBackground.Children.Add(_aMainTimeClockHourTextBackground);
-      Storyboard.SetTargetName(_aMainTimeClockHourTextBackground, "MainTimeClockHourTextBackground");
-      Storyboard.SetTargetProperty(_aMainTimeClockHourTextBackground, new PropertyPath(Brush.OpacityProperty));
-      _sbMainTimeClockMinuteTextBackground.Children.Add(_aMainTimeClockMinuteTextBackground);
-      Storyboard.SetTargetName(_aMainTimeClockMinuteTextBackground, "MainTimeClockMinuteTextBackground");
-      Storyboard.SetTargetProperty(_aMainTimeClockMinuteTextBackground, new PropertyPath(Brush.OpacityProperty));
-      _sbMainTimeClockSecondTextBackground.Children.Add(_aMainTimeClockSecondTextBackground);
-      Storyboard.SetTargetName(_aMainTimeClockSecondTextBackground, "MainTimeClockSecondTextBackground");
-      Storyboard.SetTargetProperty(_aMainTimeClockSecondTextBackground, new PropertyPath(Brush.OpacityProperty));
-    }
+      private MainWindow W {
+        get;
+      }
+      private FrameworkElement P {
+        get;
+      }
+      private FrameworkElement I {
+        get;
+      }
+      private FrameworkElement T {
+        get;
+      }
+      private FrameworkElement TCAI {
+        get;
+      }
+      private FrameworkElement TCA {
+        get;
+      }
+      private FrameworkElement TCBI {
+        get;
+      }
+      private FrameworkElement TCB {
+        get;
+      }
+      private FrameworkElement TCBCA {
+        get;
+      }
+      private FrameworkElement TCBCB {
+        get;
+      }
+      private FrameworkElement TCBCC {
+        get;
+      }
+      private FrameworkElement TCBCD {
+        get;
+      }
+      private FrameworkElement TCBCE {
+        get;
+      }
+      private Storyboard SB {
+        get; set;
+      }
+      private DoubleAnimation A {
+        get; set;
+      }
+      private Storyboard SBDate {
+        get; set;
+      }
+      private DoubleAnimation ADate {
+        get; set;
+      }
+      private Storyboard SBDateBackground {
+        get; set;
+      }
+      private DoubleAnimation ADateBackgorund {
+        get; set;
+      }
+      private Storyboard SBClock {
+        get; set;
+      }
+      private DoubleAnimation AClock {
+        get; set;
+      }
+      private Storyboard SBClockBackground {
+        get; set;
+      }
+      private DoubleAnimation AClockBackground {
+        get; set;
+      }
+      private Storyboard SBClockHourBackground {
+        get; set;
+      }
+      private DoubleAnimation AClockHourBackground {
+        get; set;
+      }
+      private Storyboard SBClockMinuteBackground {
+        get; set;
+      }
+      private DoubleAnimation AClockMinuteBackground {
+        get; set;
+      }
+      private Storyboard SBClockSecondBackground {
+        get; set;
+      }
+      private DoubleAnimation AClockSecondBackground {
+        get; set;
+      }
+      private object EXLock {
+        get; set;
+      }
+      private SemaphoreSlim EXSemaphore {
+        get; set;
+      }
+      private SemaphoreSlim EXSemaphoreHour {
+        get; set;
+      }
+      private SemaphoreSlim EXSemaphoreMinute {
+        get; set;
+      }
+      private SemaphoreSlim EXSemaphoreSecond {
+        get; set;
+      }
+      private bool EXProcessing {
+        get; set;
+      }
+      private bool EXShown {
+        get; set;
+      }
 
-    /// <summary>
-    ///   Show MainClock.
-    /// </summary>
-    /// <returns></returns>
-    private async Task ShowMainClock()
-    {
-      async Task ShowMainTimeDate()
+      private bool IsRequestedStop {
+        get; set;
+      }
+      private Task TaskUpdate {
+        get; set;
+      }
+
+
+      public MainTime_(MainWindow window, FrameworkElement parent, FrameworkElement indirect, FrameworkElement target, FrameworkElement targetChildAIndirect, FrameworkElement targetChildA, FrameworkElement targetChildBIndirect, FrameworkElement targetChildB, FrameworkElement targetChildBChildA, FrameworkElement targetChildBChildB, FrameworkElement targetChildBChildC, FrameworkElement targetChildBChildD, FrameworkElement targetChildBChildE)
       {
-        SemaphoreSlim ss = new SemaphoreSlim(0, 1);
-        string text = DateTime.Now.ToString("yyyy年MM月dd日(ddd)");
+        W = window;
+        P = parent;
+        I = indirect;
+        T = target;
+        TCAI = targetChildAIndirect;
+        TCA = targetChildA;
+        TCBI = targetChildBIndirect;
+        TCB = targetChildB;
+        TCBCA = targetChildBChildA;
+        TCBCB = targetChildBChildB;
+        TCBCC = targetChildBChildC;
+        TCBCD = targetChildBChildD;
+        TCBCE = targetChildBChildE;
+        SB = new Storyboard();
+        A = new DoubleAnimation(1, 0, DURATION_HIDE);
+        SBDate = new Storyboard();
+        ADate = new DoubleAnimation(1, 0, DURATION_HIDE);
+        SBDateBackground = new Storyboard();
+        ADateBackgorund = new DoubleAnimation(OPACITY_BLINK, 0, DURATION_BLINK);
+        SBClock = new Storyboard();
+        AClock = new DoubleAnimation(1, 0, DURATION_HIDE);
+        SBClockBackground = new Storyboard();
+        AClockBackground = new DoubleAnimation(OPACITY_BLINK, 0, DURATION_BLINK);
+        SBClockHourBackground = new Storyboard();
+        AClockHourBackground = new DoubleAnimation(OPACITY_BLINK, 0, DURATION_BLINK);
+        SBClockMinuteBackground = new Storyboard();
+        AClockMinuteBackground = new DoubleAnimation(OPACITY_BLINK, 0, DURATION_BLINK);
+        SBClockSecondBackground = new Storyboard();
+        AClockSecondBackground = new DoubleAnimation(OPACITY_BLINK, 0, DURATION_BLINK);
+        EXLock = new object();
+        EXSemaphore = new SemaphoreSlim(0, 1);
+        EXSemaphoreHour = new SemaphoreSlim(0, 1);
+        EXSemaphoreMinute = new SemaphoreSlim(0, 1);
+        EXSemaphoreSecond = new SemaphoreSlim(0, 1);
+        EXProcessing = false;
+        EXShown = false;
 
-        void OnCompleted(object sender, EventArgs e)
-        {
-          _sbMainTimeDateTextBackground.Completed -= OnCompleted;
-          ss.Release();
+        IsRequestedStop = false;
+        TaskUpdate = Task.CompletedTask;
+
+        I.Width = P.Width * 0.9;  // If size of Viewbox is auto, then forced to parent size fit?
+        I.Height = P.Height * 0.9;
+        T.Width = I.Width;  // If size of Grid is auto too, then forced to parent size fit?
+        T.Height = I.Height;
+        SB.Children.Add(A);
+        Storyboard.SetTargetName(A, I.Name);
+        Storyboard.SetTargetProperty(A, PROPERTY_PATH_OPACITY);
+        SBDate.Children.Add(ADate);
+        Storyboard.SetTargetName(ADate, TCAI.Name);
+        Storyboard.SetTargetProperty(ADate, PROPERTY_PATH_OPACITY);
+        SBDateBackground.Children.Add(ADateBackgorund);
+        Storyboard.SetTargetName(ADateBackgorund, TCA.Name);
+        Storyboard.SetTargetProperty(ADateBackgorund, PROPERTY_PATH_TEXTBLOCK_BACKGROUND_OPACITY);
+        SBClock.Children.Add(AClock);
+        Storyboard.SetTargetName(AClock, TCBI.Name);
+        Storyboard.SetTargetProperty(AClock, PROPERTY_PATH_OPACITY);
+        SBClockBackground.Children.Add(AClockBackground);
+        Storyboard.SetTargetName(AClockBackground, TCB.Name);
+        Storyboard.SetTargetProperty(AClockBackground, new PropertyPath("(0).(1)", new DependencyProperty[] { StackPanel.BackgroundProperty, SolidColorBrush.OpacityProperty }));
+        SBClockHourBackground.Children.Add(AClockHourBackground);
+        Storyboard.SetTargetName(AClockHourBackground, TCBCA.Name);
+        Storyboard.SetTargetProperty(AClockHourBackground, PROPERTY_PATH_TEXTBLOCK_BACKGROUND_OPACITY);
+        SBClockMinuteBackground.Children.Add(AClockMinuteBackground);
+        Storyboard.SetTargetName(AClockMinuteBackground, TCBCB.Name);
+        Storyboard.SetTargetProperty(AClockMinuteBackground, PROPERTY_PATH_TEXTBLOCK_BACKGROUND_OPACITY);
+        SBClockSecondBackground.Children.Add(AClockSecondBackground);
+        Storyboard.SetTargetName(AClockSecondBackground, TCBCC.Name);
+        Storyboard.SetTargetProperty(AClockSecondBackground, PROPERTY_PATH_TEXTBLOCK_BACKGROUND_OPACITY);
+        SB.Completed += OnCompleted;
+        SBDate.Completed += OnCompleted;
+        SBDateBackground.Completed += OnCompleted;
+        SBClock.Completed += OnCompleted;
+        SBClockBackground.Completed += OnCompleted;
+        SBClockHourBackground.Completed += OnCompletedHour;
+        SBClockMinuteBackground.Completed += OnCompletedMinute;
+        SBClockSecondBackground.Completed += OnCompletedSecond;
+      }
+
+
+      void OnCompleted(object sender, EventArgs e)
+      {
+        EXSemaphore.Release();
+      }
+
+      void OnCompletedHour(object sender, EventArgs e)
+      {
+        EXSemaphoreHour.Release();
+      }
+
+      void OnCompletedMinute(object sender, EventArgs e)
+      {
+        EXSemaphoreMinute.Release();
+      }
+
+      void OnCompletedSecond(object sender, EventArgs e)
+      {
+        EXSemaphoreSecond.Release();
+      }
+
+
+      public async Task Show()
+      {
+        lock (EXLock) {
+          if (EXProcessing || EXShown) return;
+          EXProcessing = true;
         }
 
 
+        DataContextMain_.TimeVisibility = Visibility.Visible;
+        I.GetBindingExpression(VisibilityProperty).UpdateTarget();
+        await Task.Delay(1);
+
+        await ShowDate();
+        await ShowClock();
+
+
+        lock (EXLock) {
+          EXShown = true;
+          EXProcessing = false;
+        }
+      }
+
+      public async Task Hide(bool animation = true)
+      {
+        lock (EXLock) {
+          if (EXProcessing || EXShown == false) return;
+          EXProcessing = true;
+        }
+
+
+        if (animation) {
+          SB.Begin(W, true);
+          await EXSemaphore.WaitAsync();
+          SB.Stop(W);
+        }
+        DataContextMain_.TimeVisibility = Visibility.Hidden;
+        I.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
+        await Task.Delay(1);
+
+
+        lock (EXLock) {
+          EXShown = false;
+          EXProcessing = false;
+        }
+      }
+
+      public async Task HidePost()
+      {
+        IsRequestedStop = true;
+        await TaskUpdate;
+      }
+
+      async Task ShowDate()
+      {
+        string text = DateTime.Now.ToString("yyyy年MM月dd日(ddd)");
+
         // Reset.
-        _dcMain.TimeDateTextWidth = 0;
-        _dcMain.TimeDateText = text;
-        MainTimeDateText.GetBindingExpression(TextBlock.WidthProperty).UpdateTarget();
-        MainTimeDateText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+        DataContextMain_.TimeDateTextWidth = 0;
+        DataContextMain_.TimeDateText = text;
+        TCA.GetBindingExpression(WidthProperty).UpdateTarget();
+        TCA.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
         await Task.Delay(1);
-        _dcMain.TimeDateTextWidth = MainTimeDateText.ActualWidth;
-        _dcMain.TimeDateText = string.Empty;
-        MainTimeDateText.GetBindingExpression(TextBlock.WidthProperty).UpdateTarget();
-        MainTimeDateText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+        DataContextMain_.TimeDateTextWidth = TCA.ActualWidth;
+        DataContextMain_.TimeDateText = string.Empty;
+        TCA.GetBindingExpression(WidthProperty).UpdateTarget();
+        TCA.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
         await Task.Delay(1);
-        _sbMainTimeDate.Stop(this);
         // Show.
-        _dcMain.TimeDateVisibility = Visibility.Visible;
-        MainTimeDate.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
+        DataContextMain_.TimeDateVisibility = Visibility.Visible;
+        TCAI.GetBindingExpression(VisibilityProperty).UpdateTarget();
         await Task.Delay(1);
 
         for (int i = 0; ;) {
-          _dcMain.TimeDateText += text[i];
-          MainTimeDateText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+          DataContextMain_.TimeDateText += text[i];
+          TCA.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
 
           ++i;
           if (i >= text.Length) {
             break;
           }
-          await Task.Delay(_TEXT_FEED_TIME);
+          await Task.Delay(TIME_TEXT_FEED);
         }
 
-        if (_blink) {
-          _sbMainTimeDateTextBackground.Completed += OnCompleted;
-          _sbMainTimeDateTextBackground.Begin(this, true);
-          await ss.WaitAsync();
+        if (W.EnableBlink) {
+          SBDateBackground.Begin(W, true);
+          await EXSemaphore.WaitAsync();
+          SBDateBackground.Stop(W);
         }
       }
 
-      async Task HideMainTimeDate(bool noAnimation = false)
+      async Task HideDate(bool animation = true)
       {
-        SemaphoreSlim ss = new SemaphoreSlim(0, 1);
-
-        void OnCompletedHide(object sender, EventArgs e)
-        {
-          _sbMainTimeDate.Completed -= OnCompletedHide;
-
-          ss.Release();
+        if (animation) {
+          SBDate.Begin(W, true);
+          await EXSemaphore.WaitAsync();
+          SBDate.Stop(W);
         }
-
-        if (noAnimation == false) {
-          _sbMainTimeDate.Completed += OnCompletedHide;
-          _sbMainTimeDate.Begin(this, true);
-          await ss.WaitAsync();
-        }
-        _dcMain.TimeDateVisibility = Visibility.Hidden;
-        MainTimeDate.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
-        _sbMainTimeDate.Stop(this);
-        _sbMainTimeDateTextBackground.Stop(this);
+        DataContextMain_.TimeDateVisibility = Visibility.Hidden;
+        TCAI.GetBindingExpression(VisibilityProperty).UpdateTarget();
       }
 
-      async Task ShowMainTimeClock()
+      async Task ShowClock()
       {
         string textHour;
         string textMinute;
         string textSecond;
-        DateTime dtOld = new DateTime();
-        SemaphoreSlim ss = new SemaphoreSlim(0, 1);
-
-        void OnCompleted(object sender, EventArgs e)
-        {
-          _sbMainTimeClockBackground.Completed -= OnCompleted;
-          ss.Release();
-        }
+        DateTime dtOld;
 
         async Task Update()
         {
@@ -168,66 +349,40 @@ namespace ChaF
 
           async Task UpdateDate()
           {
-            await HideMainTimeDate();
-            await ShowMainTimeDate();
+            await HideDate();
+            await ShowDate();
           }
 
           async Task UpdateClockHour()
           {
-            SemaphoreSlim ss_ = new SemaphoreSlim(0, 1);
-
-            void OnCompleted_(object sender, EventArgs e)
-            {
-              _sbMainTimeClockHourTextBackground.Completed -= OnCompleted_;
-              ss_.Release();
-            }
-
-
-            _dcMain.TimeClockHourText = dtCurrent.ToString("HH");
-            MainTimeClockHourText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-            if (_blink) {
-              _sbMainTimeClockHourTextBackground.Completed += OnCompleted_;
-              _sbMainTimeClockHourTextBackground.Begin(this, true);
-              await ss.WaitAsync();
+            DataContextMain_.TimeClockHourText = dtCurrent.ToString("HH");
+            TCBCA.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+            if (W.EnableBlink) {
+              SBClockHourBackground.Begin(W, true);
+              await EXSemaphoreHour.WaitAsync();
+              SBClockHourBackground.Stop(W);
             }
           }
 
           async Task UpdateClockMinute()
           {
-            SemaphoreSlim ss_ = new SemaphoreSlim(0, 1);
-
-            void OnCompleted_(object sender, EventArgs e)
-            {
-              _sbMainTimeClockMinuteTextBackground.Completed -= OnCompleted_;
-              ss_.Release();
-            }
-
-
-            _dcMain.TimeClockMinuteText = dtCurrent.ToString("mm");
-            MainTimeClockMinuteText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-            if (_blink) {
-              _sbMainTimeClockMinuteTextBackground.Completed += OnCompleted_;
-              _sbMainTimeClockMinuteTextBackground.Begin(this, true);
-              await ss.WaitAsync();
+            DataContextMain_.TimeClockMinuteText = dtCurrent.ToString("mm");
+            TCBCB.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+            if (W.EnableBlink) {
+              SBClockMinuteBackground.Begin(W, true);
+              await EXSemaphoreMinute.WaitAsync();
+              SBClockMinuteBackground.Stop(W);
             }
           }
 
           async Task UpdateClockSecond()
           {
-            SemaphoreSlim ss_ = new SemaphoreSlim(0, 1);
-
-            void OnCompleted_(object sender, EventArgs e)
-            {
-              _sbMainTimeClockSecondTextBackground.Completed -= OnCompleted_;
-              ss_.Release();
-            }
-
-            _dcMain.TimeClockSecondText = dtCurrent.ToString("ss");
-            MainTimeClockSecondText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-            if (_blink) {
-              _sbMainTimeClockSecondTextBackground.Completed += OnCompleted_;
-              _sbMainTimeClockSecondTextBackground.Begin(this, true);
-              await ss.WaitAsync();
+            DataContextMain_.TimeClockSecondText = dtCurrent.ToString("ss");
+            TCBCC.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+            if (W.EnableBlink) {
+              SBClockSecondBackground.Begin(W, true);
+              await EXSemaphoreSecond.WaitAsync();
+              SBClockSecondBackground.Stop(W);
             }
           }
 
@@ -236,7 +391,6 @@ namespace ChaF
             await Task.Delay(1000 - DateTime.Now.Millisecond);
 
             dtCurrent = DateTime.Now;
-
             if (dtCurrent.Day != dtOld.Day) {
               _ = UpdateDate();
             }
@@ -249,133 +403,78 @@ namespace ChaF
             if (dtCurrent.Second != dtOld.Second) {
               _ = UpdateClockSecond();
             }
+            dtOld = dtCurrent;
 
-            if (_isRequestedStopMainTimeClock) {
+            if (IsRequestedStop) {
               break;
             }
-
-            dtOld = dtCurrent;
           }
 
-          await HideMainTimeDate(true);
-          _dcMain.TimeClockVisibility = Visibility.Hidden;
-          MainTimeClock.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
-          _sbMainTimeClockHourTextBackground.Stop(this);
-          _sbMainTimeClockMinuteTextBackground.Stop(this);
-          _sbMainTimeClockSecondTextBackground.Stop(this);
-          _isRequestedStopMainTimeClock = false;
+          await HideDate(false);
+          DataContextMain_.TimeClockVisibility = Visibility.Hidden;
+          DataContextMain_.TimeClockHourText = string.Empty;
+          DataContextMain_.TimeClockMinuteText = string.Empty;
+          DataContextMain_.TimeClockSecondText = string.Empty;
+          DataContextMain_.TimeClockColonAVisibility = Visibility.Hidden;
+          DataContextMain_.TimeClockColonBVisibility = Visibility.Hidden;
+          TCBI.GetBindingExpression(VisibilityProperty).UpdateTarget();
+          TCBCA.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+          TCBCB.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+          TCBCC.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+          TCBCD.GetBindingExpression(VisibilityProperty).UpdateTarget();
+          TCBCE.GetBindingExpression(VisibilityProperty).UpdateTarget();
+          await Task.Delay(1);
+          IsRequestedStop = false;
         }
 
-        // Reset.
-        _dcMain.TimeClockHourText = string.Empty;
-        _dcMain.TimeClockMinuteText = string.Empty;
-        _dcMain.TimeClockSecondText = string.Empty;
-        _dcMain.TimeClockColonAVisibility = Visibility.Hidden;
-        _dcMain.TimeClockColonBVisibility = Visibility.Hidden;
-        MainTimeClockHourText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-        MainTimeClockMinuteText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-        MainTimeClockSecondText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-        MainTimeClockColonA.GetBindingExpression(TextBlock.VisibilityProperty).UpdateTarget();
-        MainTimeClockColonB.GetBindingExpression(TextBlock.VisibilityProperty).UpdateTarget();
-        await Task.Delay(1);
-        _sbMainTimeClock.Stop(this);
-        // Show.
-        _dcMain.TimeClockVisibility = Visibility.Visible;
-        MainTimeClock.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
+
+        DataContextMain_.TimeClockVisibility = Visibility.Visible;
+        TCBI.GetBindingExpression(VisibilityProperty).UpdateTarget();
         await Task.Delay(1);
 
         dtOld = DateTime.Now;
+        // Show hour.
         textHour = dtOld.ToString("HH");
         for (int i = 0; i < textHour.Length; ++i) {
-          _dcMain.TimeClockHourText += textHour[i];
-          MainTimeClockHourText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-          await Task.Delay(_TEXT_FEED_TIME);
+          DataContextMain_.TimeClockHourText += textHour[i];
+          TCBCA.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+          await Task.Delay(TIME_TEXT_FEED);
         }
-
-        _dcMain.TimeClockColonAVisibility = Visibility.Visible;
-        MainTimeClockColonA.GetBindingExpression(TextBlock.VisibilityProperty).UpdateTarget();
-        await Task.Delay(_TEXT_FEED_TIME);
-
+        // Show first colon.
+        DataContextMain_.TimeClockColonAVisibility = Visibility.Visible;
+        TCBCD.GetBindingExpression(VisibilityProperty).UpdateTarget();
+        await Task.Delay(TIME_TEXT_FEED);
+        // Show minute.
         textMinute = dtOld.ToString("mm");
         for (int i = 0; i < textMinute.Length; ++i) {
-          _dcMain.TimeClockMinuteText += textMinute[i];
-          MainTimeClockMinuteText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
-          await Task.Delay(_TEXT_FEED_TIME);
+          DataContextMain_.TimeClockMinuteText += textMinute[i];
+          TCBCB.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+          await Task.Delay(TIME_TEXT_FEED);
         }
-
+        // Show second colon.
+        DataContextMain_.TimeClockColonBVisibility = Visibility.Visible;
+        TCBCE.GetBindingExpression(VisibilityProperty).UpdateTarget();
+        await Task.Delay(TIME_TEXT_FEED);
+        // Show second.
         textSecond = DateTime.Now.ToString("ss");
-        _dcMain.TimeClockColonBVisibility = Visibility.Visible;
-        MainTimeClockColonB.GetBindingExpression(TextBlock.VisibilityProperty).UpdateTarget();
-        await Task.Delay(_TEXT_FEED_TIME);
-
         for (int i = 0; ;) {
-          _dcMain.TimeClockSecondText += textSecond[i];
-          MainTimeClockSecondText.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
+          DataContextMain_.TimeClockSecondText += textSecond[i];
+          TCBCC.GetBindingExpression(TextBlock.TextProperty).UpdateTarget();
 
           ++i;
           if (i >= textSecond.Length) {
             break;
           }
-          await Task.Delay(_TEXT_FEED_TIME);
+          await Task.Delay(TIME_TEXT_FEED);
         }
 
-
-        if (_blink) {
-          _sbMainTimeClockBackground.Completed += OnCompleted;
-          _sbMainTimeClockBackground.Begin(this, true);
-          await ss.WaitAsync();
+        if (W.EnableBlink) {
+          SBClockBackground.Begin(W, true);
+          await EXSemaphore.WaitAsync();
         }
 
-        _taskMainTimeClock = Update();
+        TaskUpdate = Update();
       }
-
-
-      // Show.
-      _dcMain.TimeVisibility = Visibility.Visible;
-      MainTime.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
-      await Task.Delay(1);
-      await ShowMainTimeDate();
-      await ShowMainTimeClock();
-    }
-
-    /// <summary>
-    ///   Hide MainClock.
-    /// </summary>
-    /// <param name="noAnimation"></param>
-    /// <returns></returns>
-    private async Task HideMainTime(bool noAnimation = false)
-    {
-      if (_taskMainTimeClock.IsCompleted) {
-        return;
-      }
-
-
-      SemaphoreSlim ss = new SemaphoreSlim(0, 1);
-
-      void OnCompleted(object sender, EventArgs e)
-      {
-        _sbMainTime.Completed -= OnCompleted;
-        ss.Release();
-      }
-
-      if (noAnimation == false) {
-        _sbMainTime.Completed += OnCompleted;
-        _sbMainTime.Begin(this, true);
-        await ss.WaitAsync();
-      }
-      _dcMain.TimeVisibility = Visibility.Hidden;
-      MainTime.GetBindingExpression(Viewbox.VisibilityProperty).UpdateTarget();
-      _sbMainTime.Stop(this);
-    }
-
-    /// <summary>
-    ///   Please to call after HideMainTime() is finished.
-    /// </summary>
-    /// <returns></returns>
-    private async Task HideMainTime_()
-    {
-      _isRequestedStopMainTimeClock = true;
-      await _taskMainTimeClock;
-    }
+    };
   }
 }
