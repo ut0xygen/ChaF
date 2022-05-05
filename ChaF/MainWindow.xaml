@@ -1,0 +1,94 @@
+﻿<Window x:Class="ChaF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ChaF"
+        mc:Ignorable="d"
+        Background="Transparent"
+        Left="0"
+        Top="0"
+        AllowsTransparency="True"
+        WindowStyle="None"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Topmost="True"
+        Style="{StaticResource WindowStyle}">
+    <StackPanel IsEnabled="False">
+        <Grid x:Name="Main">
+            <Rectangle x:Name="MainFrame"/>
+            <Rectangle x:Name="MainProgress" Width="0" VerticalAlignment="Bottom" Visibility="{Binding ProgressVisibility}"/>
+            <Viewbox x:Name="MainStatus" HorizontalAlignment="Left" Visibility="{Binding StatusVisibility}">
+                <TextBlock x:Name="MainStatusText" Width="{Binding StatusTextWidth}" Text="{Binding StatusText}">
+                    <TextBlock.Background>
+                        <SolidColorBrush x:Name="MainStatusTextBackground" Opacity="0"/>
+                    </TextBlock.Background>
+                </TextBlock>
+            </Viewbox>
+            <Viewbox x:Name="MainTime" Visibility="{Binding TimeVisibility}">
+                <Grid x:Name="MainTimeFrame">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                    <Viewbox x:Name="MainTimeDate" Grid.Row="0" Visibility="{Binding TimeDateVisibility}">
+                        <TextBlock x:Name="MainTimeDateText" Width="{Binding TimeDateTextWidth}"  Text="{Binding TimeDateText}">
+                            <TextBlock.Background>
+                                <SolidColorBrush x:Name="MainTimeDateTextBackground" Opacity="0"/>
+                            </TextBlock.Background>
+                        </TextBlock>
+                    </Viewbox>
+                    <Viewbox x:Name="MainTimeClock" Grid.Row="1" Visibility="{Binding TimeClockVisibility}">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" Visibility="Hidden">
+                                <StackPanel.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="1,0"></Setter>
+                                        <Setter Property="Text" Value="00"></Setter>
+                                    </Style>
+                                </StackPanel.Resources>
+
+                                <TextBlock/>
+                                <TextBlock Text=":"/>
+                                <TextBlock/>
+                                <TextBlock Text=":"/>
+                                <TextBlock/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="1,0"></Setter>
+                                    </Style>
+                                </StackPanel.Resources>
+
+                                <StackPanel.Background>
+                                    <SolidColorBrush x:Name="MainTimeClockBackground" Opacity="0"/>
+                                </StackPanel.Background>
+
+                                <TextBlock x:Name="MainTimeClockHourText" Text="{Binding TimeClockHourText}">
+                                    <TextBlock.Background>
+                                        <SolidColorBrush x:Name="MainTimeClockHourTextBackground" Opacity="0"/>
+                                    </TextBlock.Background>
+                                </TextBlock>
+                                <TextBlock x:Name="MainTimeClockColonA" Visibility="{Binding TimeClockColonAVisibility}" Text=":"/>
+                                <TextBlock x:Name="MainTimeClockMinuteText" Text="{Binding TimeClockMinuteText}">
+                                    <TextBlock.Background>
+                                        <SolidColorBrush x:Name="MainTimeClockMinuteTextBackground" Opacity="0"/>
+                                    </TextBlock.Background>
+                                </TextBlock>
+                                <TextBlock x:Name="MainTimeClockColonB" Visibility="{Binding TimeClockColonBVisibility}" Text=":"/>
+                                <TextBlock x:Name="MainTimeClockSecondText" Text="{Binding TimeClockSecondText}">
+                                    <TextBlock.Background>
+                                        <SolidColorBrush x:Name="MainTimeClockSecondTextBackground" Opacity="0"/>
+                                    </TextBlock.Background>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Viewbox>
+                </Grid>
+            </Viewbox>
+        </Grid>
+    </StackPanel>
+</Window>
