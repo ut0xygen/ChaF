@@ -3,12 +3,11 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Equaller;
+using Microsoft.Win32;
 
 
 namespace ChaF
@@ -103,9 +102,12 @@ namespace ChaF
     private IntPtr WindowHandle {
       get; set;
     }
-    private bool ValidHotkey {
+    private bool IsSetuped {
       get; set;
     }
+    //private bool IsHideByPower {
+    //  get; set;
+    //}
     private object EXLockHotkey {
       get; set;
     }
@@ -150,6 +152,66 @@ namespace ChaF
     }
 
 
+    //private void OmPowerModeChange(object sender, PowerModeChangedEventArgs e)
+    //{
+    //  switch (e.Mode) {
+    //    case PowerModes.Suspend:
+    //      lock (EXLockHotkey) {
+    //        if (EXProcessingHotkey || IsSetuped == false || IsVisible == false) return;
+    //        EXProcessingHotkey = true;
+    //        IsHideByPower = true;
+    //      }
+
+    //      this.Dispatcher.Invoke(new Action(async () => {
+    //        await MT.Hide();
+    //        await MF.Hide();
+    //        this.Hide();
+    //        await MT.HidePost();
+
+
+    //        lock (EXLockHotkey) {
+    //          EXProcessingHotkey = false;
+    //        }
+    //      }));
+    //      break;
+
+    //    case PowerModes.Resume:
+    //      lock (EXLockHotkey) {
+    //        if (EXProcessingHotkey || IsSetuped == false || IsHideByPower == false) return;
+    //        EXProcessingHotkey = true;
+    //      }
+
+    //      this.Dispatcher.Invoke(new Action(async () => {
+    //        DateTime dt = DateTime.Now;
+
+
+    //        this.Show();
+    //        await MF.Show();
+
+    //        // Synchronization.
+    //        if (DateTime.Now.Second > 56) {
+    //          await MP.Show();
+    //          await MS.Show("SYNCHRONIZING");
+
+    //          await Task.Delay(((60 - dt.Second) * 1000) + (1000 - dt.Millisecond));
+
+    //          await MS.Hide();
+    //          await MP.Hide();
+    //        }
+
+    //        await MT.Show();
+
+
+    //        lock (EXLockHotkey) {
+    //          IsHideByPower = false;
+    //          EXProcessingHotkey = false;
+    //        }
+    //      }));
+    //      break;
+    //  }
+    //}
+
+
     private void Setup()
     {
       double screenWidth = SystemParameters.WorkArea.Width;
@@ -160,7 +222,8 @@ namespace ChaF
       ID_HOTKEY_VISIBILITY = 1;
 
       Main.DataContext = DataContextMain_;
-      ValidHotkey = false;
+      IsSetuped = false;
+      //IsHideByPower = false;
       EXLockHotkey = new object();
       EXProcessingHotkey = false;
       Surface = "LEFT";
@@ -222,6 +285,8 @@ namespace ChaF
       MP = new MainProgress_(this, Main, MainProgress);
       MS = new MainStatus_(this, Main, MainStatusI, MainStatus);
       MT = new MainTime_(this, Main, MainTimeI, MainTime, MainTimeDateI, MainTimeDate, MainTimeClockI, MainTimeClock, MainTimeClockHour, MainTimeClockMinute, MainTimeClockSecond, MainTimeClockColonA, MainTimeClockColonB);
+
+      //SystemEvents.PowerModeChanged += OmPowerModeChange;
     }
 
     private void ReadSettings()
@@ -346,20 +411,19 @@ namespace ChaF
 
     private async void Execute()
     {
+      DateTime dt = DateTime.Now;
+
+
       // Show MainFrame.
       await MF.Show();
 
       // Adjustment statement.
       if (DateTime.Now.Second > 56) {
-        DateTime dt;
-
-
         // Show waiting-text and play loading animation.
         await MP.Show();
         await MS.Show("SYNCHRONIZING");
 
         // Adjustment
-        dt = DateTime.Now;
         await Task.Delay(((60 - dt.Second) * 1000) + (1000 - dt.Millisecond));
 
         // Hide waiting-text and stop loading animation.
@@ -371,7 +435,7 @@ namespace ChaF
       await MT.Show();
 
       // Enable hotkey.
-      ValidHotkey = true;
+      IsSetuped = true;
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -391,7 +455,7 @@ namespace ChaF
       if (msg.message != 0x0312) return;
 
       lock (EXLockHotkey) {
-        if (EXProcessingHotkey || ValidHotkey == false) return;
+        if (EXProcessingHotkey || IsSetuped == false) return;
         EXProcessingHotkey = true;
       }
 
@@ -421,20 +485,18 @@ namespace ChaF
             await MT.HidePost();
           }
           else {
+            DateTime dt = DateTime.Now;
+
+
             this.Show();
             await MF.Show();
 
             // Synchronization.
             if (DateTime.Now.Second > 56) {
-              DateTime dt = DateTime.Now;
-
-
               await MP.Show();
               await MS.Show("SYNCHRONIZING");
 
-              dt = DateTime.Now;
               await Task.Delay(((60 - dt.Second) * 1000) + (1000 - dt.Millisecond));
-
 
               await MS.Hide();
               await MP.Hide();

@@ -391,7 +391,7 @@ namespace ChaF
             await Task.Delay(1000 - DateTime.Now.Millisecond);
 
             dtCurrent = DateTime.Now;
-            if (dtCurrent.Day != dtOld.Day) {
+            if (dtCurrent.Date != dtOld.Date) {
               _ = UpdateDate();
             }
             if (dtCurrent.Hour != dtOld.Hour) {
