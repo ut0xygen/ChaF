@@ -5,8 +5,8 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <FontFamily x:Key="Font">
-            /ChaF;component/Fonts/Roboto-Bold.ttf#Roboto,
-            /ChaF;component/Fonts/NotoSansJP-Bold.otf#Noto Sans JP
+            /ChaF;component/Fonts/Subset/Roboto-Bold.ttf#Roboto,
+            /ChaF;component/Fonts/Subset/NotoSansJP-Bold.otf#Noto Sans JP
         </FontFamily>
         <SolidColorBrush x:Key="ColorBackground" Color="Black" Opacity="0.5"/>
         <SolidColorBrush x:Key="ColorProgress" Color="Cyan" Opacity="0.7"/>
