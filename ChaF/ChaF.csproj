@@ -112,8 +112,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Resource Include="Fonts\Full\NotoSansJP-Bold.otf" />
-    <Resource Include="Fonts\Full\Roboto-Bold.ttf" />
     <Resource Include="Fonts\Subset\NotoSansJP-Bold.otf" />
     <Resource Include="Fonts\Subset\Roboto-Bold.ttf" />
     <None Include="Properties\Settings.settings">
