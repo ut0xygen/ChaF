@@ -32,7 +32,7 @@ namespace ChaF
 
       InitializeComponent();
 
-      Loaded += (sender, e) =>
+      ContentRendered += (sender, e) =>
       {
         Setup();
         Execute();

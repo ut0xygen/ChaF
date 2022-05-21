@@ -219,7 +219,7 @@ namespace ChaF
 
 
       ID_HOTKEY_CLOSE = 0;
-      ID_HOTKEY_VISIBILITY = 1;
+      ID_HOTKEY_VISIBILITY = 0;
 
       Main.DataContext = DataContextMain_;
       IsSetuped = false;
@@ -372,7 +372,6 @@ namespace ChaF
       const int MAX_HOTKEY_ID = 0xC000;
 
       int result;
-      bool failed = false;
 
 
       // Get window handle.
@@ -386,25 +385,25 @@ namespace ChaF
       );
 
       // Register close hotkey.
-      failed = true;
-      for (; ID_HOTKEY_CLOSE < MAX_HOTKEY_ID; ++ID_HOTKEY_CLOSE) {
+      while (ID_HOTKEY_CLOSE < MAX_HOTKEY_ID) {
         result = RegisterHotKey(WindowHandle, ID_HOTKEY_CLOSE, (int)ModifierKeys.Alt, 0x2E);
-        if (result != 0) {
-          failed = false;
-          break;
-        }
+        if (result != 0) break;
+
+        ++ID_HOTKEY_CLOSE;
       }
-      if (failed) Close();
+      if (ID_HOTKEY_CLOSE == MAX_HOTKEY_ID) Close();
       // Register show/hide hotkey.
-      failed = true;
-      for (; ID_HOTKEY_VISIBILITY < MAX_HOTKEY_ID; ++ID_HOTKEY_VISIBILITY) {
-        result = RegisterHotKey(WindowHandle, ID_HOTKEY_VISIBILITY, (int)ModifierKeys.Alt, 0x78);
-        if (result != 0) {
-          failed = false;
-          break;
-        }
+      ID_HOTKEY_VISIBILITY = ID_HOTKEY_CLOSE + 1;
+      while (ID_HOTKEY_VISIBILITY < MAX_HOTKEY_ID) {
+        result = RegisterHotKey(WindowHandle, ID_HOTKEY_VISIBILITY, (int)ModifierKeys.Shift, 0x77);
+        if (result != 0) break;
+
+        ++ID_HOTKEY_VISIBILITY;
       }
-      if (failed) Close();
+      if (ID_HOTKEY_VISIBILITY == MAX_HOTKEY_ID) {
+        UnregisterHotKey(WindowHandle, ID_HOTKEY_CLOSE);
+        Close();
+      }
       // Subscribe hotkey event.
       ComponentDispatcher.ThreadPreprocessMessage += OnThreadPreprocessMessage;
     }
